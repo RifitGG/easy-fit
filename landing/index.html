@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FitApp — Ваш персональный тренер</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <div class="nav-logo">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <path d="M6.5 6.5L17.5 17.5M4 9L9 4M15 20L20 15M3 12L12 3M12 21L21 12M2 15L15 2M9 22L22 9"
+            stroke="#8B83FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        FitApp
+      </div>
+      <div class="nav-links">
+        <a href="#features">Возможности</a>
+        <a href="#screenshots">Скриншоты</a>
+        <a href="#demo">Попробовать</a>
+        <a href="#download">Скачать</a>
+      </div>
+      <a href="#download" class="nav-cta">Скачать</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-inner">
+        <div class="fade-in">
+          <div class="hero-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill="#8B83FF"/>
+            </svg>
+            Бесплатно &amp; Без рекламы
+          </div>
+          <h1>Ваш <span>фитнес</span><br/>начинается здесь</h1>
+          <p class="hero-subtitle">
+            Персональный тренер в кармане. Каталог упражнений, создание тренировок,
+            календарь и детальная статистика — всё в одном приложении.
+          </p>
+          <div class="hero-buttons">
+            <a href="#demo" class="btn-primary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <polygon points="5,3 19,12 5,21" fill="#fff"/>
+              </svg>
+              Попробовать демо
+            </a>
+            <a href="#download" class="btn-outline">Скачать приложение</a>
+          </div>
+        </div>
+        <div class="phone-mockup fade-in-right">
+          <div class="phone-frame">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <div class="phone-placeholder">
+                <div class="phone-placeholder-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M3 9L12 2L21 9V20C21 20.5523 20.5523 21 20 21H4C3.44772 21 3 20.5523 3 20V9Z"
+                      stroke="#8B83FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <polyline points="9,22 9,12 15,12 15,22" stroke="#8B83FF" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <span class="phone-placeholder-text">Скриншот<br/>главного экрана</span>
+              </div>
+            </div>
+          </div>
+          <!-- cards -->
+          <div class="phone-floating-1 glass" style="padding: 14px 20px; display: flex; align-items: center; gap: 12px;">
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--tint-light); display: flex; align-items: center; justify-content: center;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M6.5 6.5L17.5 17.5M4 9L9 4M15 20L20 15" stroke="#8B83FF" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div>
+              <div style="font-size: 20px; font-weight: 800;">12</div>
+              <div style="font-size: 11px; color: var(--text-secondary);">Тренировок</div>
+            </div>
+          </div>
+          <div class="phone-floating-2 glass" style="padding: 14px 20px; display: flex; align-items: center; gap: 12px;">
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--success-light); display: flex; align-items: center; justify-content: center;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+                  fill="#34D399"/>
+              </svg>
+            </div>
+            <div>
+              <div style="font-size: 20px; font-weight: 800;">5</div>
+              <div style="font-size: 11px; color: var(--text-secondary);">Дней подряд</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BANNER -->
+  <section class="stats-banner">
+    <div class="container">
+      <div class="stats-grid fade-in">
+        <div class="stat-item">
+          <div class="stat-value">20+</div>
+          <div class="stat-label">Упражнений</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">10</div>
+          <div class="stat-label">Групп мышц</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">7</div>
+          <div class="stat-label">Типов оборудования</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">100%</div>
+          <div class="stat-label">Бесплатно</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="fade-in">
+        <div class="section-label">Возможности</div>
+        <h2 class="section-title">Всё для эффективных тренировок</h2>
+        <p class="section-subtitle">
+          Мы собрали все необходимые инструменты, чтобы ваши тренировки были продуктивными и мотивирующими.
+        </p>
+      </div>
+      <div class="features-grid">
+        <div class="glass feature-card fade-in" style="transition-delay: 0.1s;">
+          <div class="feature-icon" style="background: var(--tint-light);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M6.5 6.5L17.5 17.5M4 9L9 4M15 20L20 15M3 12L12 3M12 21L21 12"
+                stroke="#8B83FF" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Каталог упражнений</h3>
+          <p class="feature-desc">20+ упражнений с пошаговыми инструкциями. Фильтрация по группам мышц, оборудованию и уровню сложности.</p>
+        </div>
+        <div class="glass feature-card fade-in" style="transition-delay: 0.2s;">
+          <div class="feature-icon" style="background: var(--success-light);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="4" width="18" height="18" rx="2" stroke="#34D399" stroke-width="2"/>
+              <line x1="16" y1="2" x2="16" y2="6" stroke="#34D399" stroke-width="2" stroke-linecap="round"/>
+              <line x1="8" y1="2" x2="8" y2="6" stroke="#34D399" stroke-width="2" stroke-linecap="round"/>
+              <line x1="3" y1="10" x2="21" y2="10" stroke="#34D399" stroke-width="2"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Календарь тренировок</h3>
+          <p class="feature-desc">Планируйте тренировки по дням. Отслеживайте выполненные и запланированные занятия в удобном календаре.</p>
+        </div>
+        <div class="glass feature-card fade-in" style="transition-delay: 0.3s;">
+          <div class="feature-icon" style="background: var(--warning-light);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M18 20V10M12 20V4M6 20V14" stroke="#FBBF24" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Детальная статистика</h3>
+          <p class="feature-desc">Серия дней, распределение по мышцам, активность за неделю — следите за прогрессом в реальном времени.</p>
+        </div>
+        <div class="glass feature-card fade-in" style="transition-delay: 0.4s;">
+          <div class="feature-icon" style="background: var(--danger-light);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M12 22C12 22 3 17 3 10C3 7 5 4 8 4C9.5 4 11 5 12 6C13 5 14.5 4 16 4C19 4 21 7 21 10C21 17 12 22 12 22Z"
+                stroke="#F87171" stroke-width="2" fill="none"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Создание тренировок</h3>
+          <p class="feature-desc">Собирайте свои тренировки из каталога. Настраивайте подходы, повторения и время отдыха для каждого упражнения.</p>
+        </div>
+        <div class="glass feature-card fade-in" style="transition-delay: 0.5s;">
+          <div class="feature-icon" style="background: rgba(96, 165, 250, 0.12);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="#60A5FA" stroke-width="2"/>
+              <polyline points="12,6 12,12 16,14" stroke="#60A5FA" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Таймер и отдых</h3>
+          <p class="feature-desc">Встроенный таймер для отдыха между подходами. Не теряйте ритм тренировки — приложение напомнит когда продолжить.</p>
+        </div>
+        <div class="glass feature-card fade-in" style="transition-delay: 0.6s;">
+          <div class="feature-icon" style="background: rgba(167, 139, 250, 0.12);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+                stroke="#A78BFA" stroke-width="2" fill="none"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Прогресс кольцо</h3>
+          <p class="feature-desc">Визуальный прогресс дня с анимированным кольцом. Видите свои достижения с первого взгляда на главном экране.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREENSHOTS -->
+  <section class="section screenshots-section" id="screenshots">
+    <div class="container">
+      <div class="fade-in">
+        <div class="section-label">Скриншоты</div>
+        <h2 class="section-title">Чистый и современный дизайн</h2>
+        <p class="section-subtitle">
+          Glassmorphism UI с продуманными анимациями и интуитивной навигацией.
+        </p>
+      </div>
+      <div class="screenshots-scroll fade-in">
+        <div class="screenshot-item">
+          <div class="screenshot-frame">
+            <div class="screenshot-inner">
+              <div class="screenshot-placeholder">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                  <path d="M3 9L12 2L21 9V20C21 20.5523 20.5523 21 20 21H4C3.44772 21 3 20.5523 3 20V9Z"
+                    stroke="#8B83FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <polyline points="9,22 9,12 15,12 15,22" stroke="#8B83FF" stroke-width="1.5"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span class="screenshot-placeholder-label">Главная</span>
+                <span class="screenshot-placeholder-hint">screenshot-home.png</span>
+              </div>
+            </div>
+          </div>
+          <div class="screenshot-label">Главный экран</div>
+        </div>
+        <div class="screenshot-item">
+          <div class="screenshot-frame">
+            <div class="screenshot-inner">
+              <div class="screenshot-placeholder">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                  <path d="M6.5 6.5L17.5 17.5M4 9L9 4M15 20L20 15M3 12L12 3M12 21L21 12"
+                    stroke="#8B83FF" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                <span class="screenshot-placeholder-label">Упражнения</span>
+                <span class="screenshot-placeholder-hint">screenshot-exercises.png</span>
+              </div>
+            </div>
+          </div>
+          <div class="screenshot-label">Каталог упражнений</div>
+        </div>
+        <div class="screenshot-item">
+          <div class="screenshot-frame">
+            <div class="screenshot-inner">
+              <div class="screenshot-placeholder">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                  <path d="M14 2H6C5.44772 2 5 2.44772 5 3V21C5 21.5523 5.44772 22 6 22H18C18.5523 22 19 21.5523 19 21V7L14 2Z"
+                    stroke="#8B83FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <polyline points="14,2 14,7 19,7" stroke="#8B83FF" stroke-width="1.5"/>
+                </svg>
+                <span class="screenshot-placeholder-label">Тренировки</span>
+                <span class="screenshot-placeholder-hint">screenshot-workouts.png</span>
+              </div>
+            </div>
+          </div>
+          <div class="screenshot-label">Мои тренировки</div>
+        </div>
+        <div class="screenshot-item">
+          <div class="screenshot-frame">
+            <div class="screenshot-inner">
+              <div class="screenshot-placeholder">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="4" width="18" height="18" rx="2" stroke="#8B83FF" stroke-width="1.5"/>
+                  <line x1="16" y1="2" x2="16" y2="6" stroke="#8B83FF" stroke-width="1.5" stroke-linecap="round"/>
+                  <line x1="8" y1="2" x2="8" y2="6" stroke="#8B83FF" stroke-width="1.5" stroke-linecap="round"/>
+                  <line x1="3" y1="10" x2="21" y2="10" stroke="#8B83FF" stroke-width="1.5"/>
+                </svg>
+                <span class="screenshot-placeholder-label">Календарь</span>
+                <span class="screenshot-placeholder-hint">screenshot-calendar.png</span>
+              </div>
+            </div>
+          </div>
+          <div class="screenshot-label">Календарь</div>
+        </div>
+        <div class="screenshot-item">
+          <div class="screenshot-frame">
+            <div class="screenshot-inner">
+              <div class="screenshot-placeholder">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                  <polygon points="5,3 19,12 5,21" stroke="#8B83FF" stroke-width="1.5" fill="none"/>
+                </svg>
+                <span class="screenshot-placeholder-label">Тренировка</span>
+                <span class="screenshot-placeholder-hint">screenshot-run.png</span>
+              </div>
+            </div>
+          </div>
+          <div class="screenshot-label">Выполнение тренировки</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section">
+    <div class="container">
+      <div class="fade-in">
+        <div class="section-label">Как это работает</div>
+        <h2 class="section-title">Три шага к результату</h2>
+        <p class="section-subtitle">Начните тренироваться эффективнее уже сегодня.</p>
+      </div>
+      <div class="steps-grid fade-in">
+        <div class="step-card">
+          <h3>Выберите упражнения</h3>
+          <p>Просмотрите каталог упражнений с фильтрацией по группам мышц. Каждое упражнение содержит пошаговую инструкцию.</p>
+        </div>
+        <div class="step-card">
+          <h3>Создайте тренировку</h3>
+          <p>Соберите свою тренировку из выбранных упражнений. Настройте подходы, повторения и время отдыха.</p>
+        </div>
+        <div class="step-card">
+          <h3>Тренируйтесь и растите</h3>
+          <p>Выполняйте тренировки с таймером и автоматическим логированием. Следите за статистикой на главном экране.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DEMO -->
+  <section class="section demo-section" id="demo">
+    <div class="container">
+      <div class="fade-in">
+        <div class="section-label">Попробуйте</div>
+        <h2 class="section-title">Тест функционала</h2>
+        <p class="section-subtitle">
+          Попробуйте основные функции приложения прямо в браузере — просмотр каталога упражнений и сборку тренировки.
+        </p>
+      </div>
+
+      <!-- Demo Tabs -->
+      <div class="demo-tabs fade-in">
+        <button class="demo-tab active" data-tab="catalog" onclick="switchDemoTab('catalog')">Каталог упражнений</button>
+        <button class="demo-tab" data-tab="builder" onclick="switchDemoTab('builder')">Создать тренировку</button>
+      </div>
+
+      <div class="demo-container fade-in">
+        <!-- LEFT PANEL -->
+        <div>
+          <!-- CATALOG TAB -->
+          <div id="tab-catalog">
+            <div class="demo-search-wrap">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M21 21L16.65 16.65M19 11C19 15.4183 15.4183 19 11 19C6.58172 19 3 15.4183 3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11Z"
+                  stroke="#9CA3AF" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              <input type="text" class="demo-search" placeholder="Поиск упражнений..." id="exerciseSearch" oninput="filterExercises()"/>
+            </div>
+            <div class="filter-chips" id="muscleFilters"></div>
+            <div class="exercise-list" id="exerciseList"></div>
+          </div>
+
+          <!-- BUILDER TAB -->
+          <div id="tab-builder" class="workout-builder">
+            <div class="workout-input-group">
+              <label>Название тренировки</label>
+              <input type="text" class="workout-input" placeholder="Например: Грудь + Трицепс" id="workoutName"/>
+            </div>
+            <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 10px;">
+              Выберите упражнения:
+            </label>
+            <div class="workout-exercises-list" id="builderExerciseList"></div>
+            <div class="built-workout" id="builtWorkout" style="display:none;">
+              <h4>Ваша тренировка:</h4>
+              <div id="builtExercisesList"></div>
+              <div class="workout-summary" id="workoutSummary"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EXERCISE DETAIL -->
+        <div>
+          <div class="exercise-detail glass elevated" id="exerciseDetail">
+            <div id="exerciseDetailContent">
+              <div style="text-align: center; padding: 60px 0;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style="margin-bottom: 16px;">
+                  <path d="M6.5 6.5L17.5 17.5M4 9L9 4M15 20L20 15M3 12L12 3M12 21L21 12M2 15L15 2M9 22L22 9"
+                    stroke="#8B83FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.3"/>
+                </svg>
+                <p style="color: var(--text-secondary); font-size: 15px;">Выберите упражнение<br/>для просмотра деталей</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="demo-hint">
+            <div class="demo-hint-title">Это демо-версия</div>
+            <div class="demo-hint-text">
+              В полной версии приложения доступны: таймер отдыха, логирование подходов,
+              статистика прогресса, календарь планирования и многое другое.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section" id="download">
+    <div class="container">
+      <div class="cta-content fade-in">
+        <h2 class="cta-title">Готовы начать?</h2>
+        <p class="cta-subtitle">
+          Скачайте приложение и начните тренироваться уже сегодня. Бесплатно и без рекламы.
+        </p>
+        <div class="cta-buttons">
+          <a href="#" class="store-badge">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <path d="M17.05 20.28C15.5 21.13 14 21 12.5 21C10.5 21 9 20.5 7.5 19.7C4.9 18.2 3 15.3 3 12C3 7.03 7.03 3 12 3C16.97 3 21 7.03 21 12C21 15.5 19.5 18.5 17.05 20.28Z"
+                stroke="#fff" stroke-width="1.5"/>
+              <path d="M12 8V16M8 12H16" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <div class="store-badge-text">
+              <div class="small">Скачать IOS</div>
+              <div class="big">(скоро)</div>
+            </div>
+          </a>
+          <a href="#" class="store-badge">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <polygon points="4,2 20,12 4,22" fill="none" stroke="#fff" stroke-width="1.5"
+                stroke-linejoin="round"/>
+            </svg>
+            <div class="store-badge-text">
+              <div class="small">Скачать Android</div>
+              <div class="big">(скоро)</div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-left">&copy; 2026 FitApp. Все права защищены.</div>
+        <div class="footer-links">
+          <a href="#">Политика конфиденциальности</a>
+          <a href="#">Условия использования</a>
+          <a href="#">Поддержка</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
