@@ -54,7 +54,7 @@ interface IntroScreenProps {
 
 export function IntroScreen({ onFinish }: IntroScreenProps) {
   const insets = useSafeAreaInsets();
-  const scheme = useColorScheme() ?? 'light';
+  const scheme = useColorScheme();
   const colors = Colors[scheme];
 
   const { greeting, sub, emoji } = useMemo(() => getTimeOfDay(), []);

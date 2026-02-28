@@ -11,7 +11,7 @@ interface ChipFilterProps {
 }
 
 export function ChipFilter({ options, selected, onSelect }: ChipFilterProps) {
-  const scheme = useColorScheme() ?? 'light';
+  const scheme = useColorScheme();
   const colors = Colors[scheme];
 
   return (

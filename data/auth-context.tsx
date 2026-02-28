@@ -1,11 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { apiLogin, apiRegister, apiLogout, apiGetMe, getCachedUser, getToken } from '@/data/api';
+import { runSync } from '@/data/sync';
+import { clearAllUserData, getSyncMeta, setSyncMeta } from '@/data/database';
 
 interface User {
   id: string;
   email: string;
   name: string;
   avatar_url: string | null;
+  avatar_original_url: string | null;
   height_cm: number | null;
   weight_kg: number | null;
   birth_date: string | null;
@@ -39,6 +42,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const ensureUserData = useCallback(async (userId: string) => {
+    try {
+      const lastId = await getSyncMeta('last_user_id');
+      if (lastId && lastId !== userId) {
+        await clearAllUserData();
+      }
+      await setSyncMeta('last_user_id', userId);
+    } catch {}
+  }, []);
+
   useEffect(() => {
     (async () => {
       try {
@@ -46,16 +59,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (token) {
          
           const cached = await getCachedUser();
-          if (cached) setUser(cached);
+          if (cached) {
+            await ensureUserData(cached.id);
+            setUser(cached);
+          }
           try {
             const fresh = await apiGetMe();
+            await ensureUserData(fresh.id);
             setUser(fresh);
-          } catch {
-            await apiLogout();
-            setUser(null);
+            runSync().catch((e) => console.warn('[Sync] startup error:', e));
+          } catch (err: any) {
+            console.warn('[Auth] apiGetMe failed, keeping cached user:', err?.message || err);
+            if (!cached) {
+              await apiLogout();
+              await clearAllUserData().catch(() => {});
+              setUser(null);
+            }
           }
         }
-      } catch {
+      } catch (err) {
+        console.error('[Auth] init error:', err);
         setUser(null);
       } finally {
         setLoading(false);
@@ -65,16 +88,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const data = await apiLogin(email, password);
+    await ensureUserData(data.user.id);
     setUser(data.user);
+    runSync().catch(() => {});
   }, []);
 
   const register = useCallback(async (email: string, password: string, name: string) => {
     const data = await apiRegister(email, password, name);
+    await ensureUserData(data.user.id);
     setUser(data.user);
+    runSync().catch(() => {});
   }, []);
 
   const logout = useCallback(async () => {
     await apiLogout();
+    await clearAllUserData().catch(() => {});
     setUser(null);
   }, []);
 

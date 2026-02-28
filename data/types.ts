@@ -66,7 +66,34 @@ export interface ScheduledWorkout {
   id: string;
   workoutId: string;
   workoutName: string;
-  date: string; // YYYY-MM-DD
+  date: string;
+  time?: string;
+}
+
+export interface PublishedWorkout {
+  id: string;
+  title: string;
+  description: string;
+  difficulty: Difficulty;
+  views: number;
+  likesCount: number;
+  createdAt: string;
+  authorId: string;
+  authorName: string;
+  workoutName: string;
+  exerciseCount: number;
+  liked: boolean;
+}
+
+export interface PublishedWorkoutDetail extends PublishedWorkout {
+  workoutId: string;
+  exercises: {
+    exerciseId: string;
+    exerciseName: string;
+    sets: number;
+    reps: number;
+    restSeconds: number;
+  }[];
 }
 
 export const MUSCLE_GROUP_LABELS: Record<MuscleGroup, string> = {

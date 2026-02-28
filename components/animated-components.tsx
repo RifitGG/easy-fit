@@ -18,10 +18,6 @@ import Animated, {
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-// ═══════════════════════════════════════
-// ScalePressable — нажатие с пружинистым уменьшением
-// ═══════════════════════════════════════
-
 interface ScalePressableProps {
   children: React.ReactNode;
   onPress?: () => void;
@@ -60,10 +56,6 @@ export function ScalePressable({
   );
 }
 
-// ═══════════════════════════════════════
-// FadeInView — появление с задержкой и снизу/сверху
-// ═══════════════════════════════════════
-
 interface FadeInViewProps {
   children: React.ReactNode;
   delay?: number;
@@ -97,10 +89,6 @@ export function FadeInView({
   return <Animated.View style={[animatedStyle, style]}>{children}</Animated.View>;
 }
 
-// ═══════════════════════════════════════
-// StaggeredItem — элемент списка с задержкой по индексу
-// ═══════════════════════════════════════
-
 interface StaggeredItemProps {
   children: React.ReactNode;
   index: number;
@@ -114,10 +102,6 @@ export function StaggeredItem({ children, index, style }: StaggeredItemProps) {
     </FadeInView>
   );
 }
-
-// ═══════════════════════════════════════
-// PulseView — пульсирующий элемент (для CTA кнопок)
-// ═══════════════════════════════════════
 
 interface PulseViewProps {
   children: React.ReactNode;
@@ -150,10 +134,6 @@ export function PulseView({ children, style, active = true }: PulseViewProps) {
   return <Animated.View style={[animatedStyle, style]}>{children}</Animated.View>;
 }
 
-// ═══════════════════════════════════════
-// AnimatedCounter — анимированное число
-// ═══════════════════════════════════════
-
 import { Text, TextStyle } from 'react-native';
 
 interface AnimatedCounterProps {
@@ -174,7 +154,6 @@ export function AnimatedCounter({ value, style, suffix = '', duration = 800 }: A
     });
   }, [value]);
 
-  // Use a JS callback approach since useAnimatedReaction needs worklets
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   useEffect(() => {
     const start = display;
@@ -203,17 +182,13 @@ export function AnimatedCounter({ value, style, suffix = '', duration = 800 }: A
   return <Text style={style}>{display}{suffix}</Text>;
 }
 
-// ═══════════════════════════════════════
-// ProgressRing — анимированное кольцо прогресса (SVG)
-// ═══════════════════════════════════════
-
 import Svg, { Circle as SvgCircle } from 'react-native-svg';
 import { View } from 'react-native';
 
 const AnimatedSvgCircle = Animated.createAnimatedComponent(SvgCircle);
 
 interface ProgressRingProps {
-  progress: number; // 0-1
+  progress: number;
   size?: number;
   strokeWidth?: number;
   color?: string;

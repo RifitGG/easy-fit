@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
-import { getExerciseById } from '@/data/exercises';
+import { loadExercise } from '@/data/exercises';
+import { getCaloriesPerSet } from '@/data/calories';
+import { Exercise } from '@/data/types';
 import { GlassCard } from '@/components/glass-card';
 import { MuscleGroupBadge, EquipmentBadge, DifficultyBadge } from '@/components/badge';
 import { ChevronLeftIcon } from '@/components/icons';
+import { FlameIcon } from '@/components/icons';
 import { ExerciseIcon } from '@/components/exercise-icons';
 import { FadeInView, ShimmerGlow } from '@/components/animated-components';
 
@@ -15,10 +18,14 @@ export default function ExerciseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const scheme = useColorScheme() ?? 'light';
+  const scheme = useColorScheme();
   const colors = Colors[scheme];
 
-  const exercise = getExerciseById(id);
+  const [exercise, setExercise] = useState<Exercise | null>(null);
+
+  useEffect(() => {
+    if (id) loadExercise(id).then(setExercise);
+  }, [id]);
 
   if (!exercise) {
     return (
@@ -61,6 +68,20 @@ export default function ExerciseDetailScreen() {
             <EquipmentBadge equipment={exercise.equipment} />
             <DifficultyBadge difficulty={exercise.difficulty} />
           </View>
+        </FadeInView>
+
+        <FadeInView delay={250} direction="up">
+          <GlassCard style={styles.calorieCard}>
+            <View style={styles.calorieRow}>
+              <View style={[styles.calorieIconWrap, { backgroundColor: colors.warningLight }]}>
+                <FlameIcon size={20} color={colors.warning} />
+              </View>
+              <View>
+                <Text style={[styles.calorieValue, { color: colors.text }]}>~{getCaloriesPerSet(exercise.id)} ккал</Text>
+                <Text style={[styles.calorieLabel, { color: colors.textSecondary }]}>за один подход</Text>
+              </View>
+            </View>
+          </GlassCard>
         </FadeInView>
 
         <FadeInView delay={300} direction="up">
@@ -167,5 +188,28 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
     flex: 1,
+  },
+  calorieCard: {
+    marginBottom: Spacing.lg,
+  },
+  calorieRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  calorieIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  calorieValue: {
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  calorieLabel: {
+    fontSize: 13,
+    marginTop: 2,
   },
 });

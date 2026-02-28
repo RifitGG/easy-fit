@@ -7,15 +7,18 @@ import {
   Pressable,
   Alert,
   Vibration,
+  Platform,
+  Modal,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
 import { Workout, CompletedExercise, CompletedSet } from '@/data/types';
-import { loadWorkouts } from '@/data/storage';
+import { loadWorkouts, loadWorkoutsLocal } from '@/data/storage';
 import { saveWorkoutLog } from '@/data/storage';
-import { getExerciseById } from '@/data/exercises';
+import { ensureExercisesLoaded, getExerciseFromCache } from '@/data/exercises';
+import { getCaloriesPerSet } from '@/data/calories';
 import { GlassCard } from '@/components/glass-card';
 import { Button } from '@/components/button';
 import { ExerciseIcon } from '@/components/exercise-icons';
@@ -29,33 +32,47 @@ import {
   PulseView,
   ShimmerGlow,
 } from '@/components/animated-components';
+import { v4 as uuidv4 } from 'uuid';
 
 function generateId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).substring(2, 10);
+  return uuidv4();
 }
 
 type Phase = 'exercise' | 'rest' | 'done';
 
 export default function RunWorkoutScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const params = useLocalSearchParams<{ id?: string; workoutId?: string }>();
+  const id = params.id || params.workoutId;
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const scheme = useColorScheme() ?? 'light';
+  const scheme = useColorScheme();
   const colors = Colors[scheme];
 
   const [workout, setWorkout] = useState<Workout | null>(null);
+  const [notFound, setNotFound] = useState(false);
   const [currentExIndex, setCurrentExIndex] = useState(0);
   const [currentSetIndex, setCurrentSetIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>('exercise');
   const [restTime, setRestTime] = useState(0);
   const [isRestRunning, setIsRestRunning] = useState(false);
+  const [showQuitModal, setShowQuitModal] = useState(false);
   const [completedData, setCompletedData] = useState<CompletedExercise[]>([]);
   const [startTime] = useState(Date.now());
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    loadWorkouts().then((all) => {
-      const found = all.find((w) => w.id === id);
+    let active = true;
+    const load = async () => {
+      await ensureExercisesLoaded();
+      const local = await loadWorkoutsLocal();
+      let found = local.find((w) => String(w.id) === String(id));
+      if (!found) {
+        try {
+          const all = await loadWorkouts();
+          found = all.find((w) => String(w.id) === String(id));
+        } catch {}
+      }
+      if (!active) return;
       if (found) {
         setWorkout(found);
         setCompletedData(
@@ -67,8 +84,12 @@ export default function RunWorkoutScreen() {
             sets: [],
           }))
         );
+      } else {
+        setNotFound(true);
       }
-    });
+    };
+    load();
+    return () => { active = false; };
   }, [id]);
 
   useEffect(() => {
@@ -93,14 +114,21 @@ export default function RunWorkoutScreen() {
     return (
       <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
         <View style={styles.centered}>
-          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Загрузка...</Text>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+            {notFound ? 'Тренировка не найдена' : 'Загрузка...'}
+          </Text>
+          {notFound && (
+            <Pressable onPress={() => router.back()} style={{ marginTop: 16 }}>
+              <Text style={{ color: colors.tint, fontSize: 16, fontWeight: '600' }}>Назад</Text>
+            </Pressable>
+          )}
         </View>
       </View>
     );
   }
 
   const currentWe = workout.exercises[currentExIndex];
-  const currentExercise = currentWe ? getExerciseById(currentWe.exerciseId) : null;
+  const currentExercise = currentWe ? getExerciseFromCache(currentWe.exerciseId) ?? null : null;
   const totalSets = workout.exercises.reduce((s, e) => s + e.sets, 0);
   const doneSets = completedData.reduce((s, e) => s + e.sets.length, 0);
   const progress = totalSets > 0 ? doneSets / totalSets : 0;
@@ -179,10 +207,12 @@ export default function RunWorkoutScreen() {
   };
 
   const handleQuit = () => {
-    Alert.alert('Завершить тренировку?', 'Прогресс будет потерян', [
-      { text: 'Продолжить', style: 'cancel' },
-      { text: 'Выйти', style: 'destructive', onPress: () => router.back() },
-    ]);
+    setShowQuitModal(true);
+  };
+
+  const confirmQuit = () => {
+    setShowQuitModal(false);
+    router.back();
   };
 
   const formatTime = (seconds: number) => {
@@ -196,6 +226,10 @@ export default function RunWorkoutScreen() {
   if (phase === 'done') {
     const completedSets = completedData.reduce((s, e) => s + e.sets.filter((set) => set.completed).length, 0);
     const totalReps = completedData.reduce((s, e) => s + e.sets.reduce((r, set) => r + set.reps, 0), 0);
+    const totalCalories = completedData.reduce((s, e) => {
+      const perSet = getCaloriesPerSet(e.exerciseId);
+      return s + e.sets.filter(set => set.completed).length * perSet;
+    }, 0);
     return (
       <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
         <ScrollView contentContainerStyle={styles.doneContent}>
@@ -230,7 +264,21 @@ export default function RunWorkoutScreen() {
             </View>
           </FadeInView>
 
-          <FadeInView delay={700} direction="up">
+          <FadeInView delay={600} direction="up">
+            <GlassCard style={styles.calorieCard} elevated>
+              <View style={styles.calorieRow}>
+                <View style={[styles.calorieIcon, { backgroundColor: colors.warningLight }]}>
+                  <Text style={{ fontSize: 24 }}>🔥</Text>
+                </View>
+                <View>
+                  <AnimatedCounter value={totalCalories} style={[styles.calorieValue, { color: colors.warning }]} suffix=" ккал" />
+                  <Text style={[styles.calorieLabel, { color: colors.textSecondary }]}>Сожжено калорий</Text>
+                </View>
+              </View>
+            </GlassCard>
+          </FadeInView>
+
+          <FadeInView delay={800} direction="up">
             <Button title="Сохранить" onPress={handleFinish} style={styles.finishBtn} />
           </FadeInView>
         </ScrollView>
@@ -238,9 +286,30 @@ export default function RunWorkoutScreen() {
     );
   }
 
+  const quitModal = (
+    <Modal visible={showQuitModal} transparent animationType="fade" onRequestClose={() => setShowQuitModal(false)}>
+      <Pressable style={styles.quitOverlay} onPress={() => setShowQuitModal(false)}>
+        <Pressable style={[styles.quitModal, { backgroundColor: colors.surface }]} onPress={(e) => e.stopPropagation()}>
+          <Text style={styles.quitEmoji}>🏋️</Text>
+          <Text style={[styles.quitTitle, { color: colors.text }]}>Завершить тренировку?</Text>
+          <Text style={[styles.quitDesc, { color: colors.textSecondary }]}>Весь прогресс будет потерян.{"\n"}Вы уверены, что хотите выйти?</Text>
+          <View style={styles.quitBtns}>
+            <Pressable onPress={() => setShowQuitModal(false)} style={[styles.quitBtn, { backgroundColor: colors.tintLight }]}>
+              <Text style={[styles.quitBtnText, { color: colors.tint }]}>Продолжить</Text>
+            </Pressable>
+            <Pressable onPress={confirmQuit} style={[styles.quitBtn, { backgroundColor: colors.dangerLight }]}>
+              <Text style={[styles.quitBtnText, { color: colors.danger }]}>Выйти</Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+
   if (phase === 'rest') {
     return (
       <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
+        {quitModal}
         <View style={styles.topBar}>
           <Pressable onPress={handleQuit} hitSlop={12}>
             <CloseIcon size={24} color={colors.textSecondary} />
@@ -278,6 +347,7 @@ export default function RunWorkoutScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
+      {quitModal}
       <View style={styles.topBar}>
         <Pressable onPress={handleQuit} hitSlop={12}>
           <CloseIcon size={24} color={colors.textSecondary} />
@@ -526,5 +596,74 @@ const styles = StyleSheet.create({
   },
   finishBtn: {
     width: '100%',
+  },
+  quitOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.xl,
+  },
+  quitModal: {
+    width: '100%',
+    maxWidth: 340,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.xl,
+    alignItems: 'center',
+  },
+  quitEmoji: {
+    fontSize: 48,
+    marginBottom: Spacing.md,
+  },
+  quitTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    marginBottom: Spacing.sm,
+    textAlign: 'center',
+  },
+  quitDesc: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: Spacing.xl,
+    lineHeight: 20,
+  },
+  quitBtns: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    width: '100%',
+  },
+  quitBtn: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: BorderRadius.lg,
+    alignItems: 'center',
+  },
+  quitBtnText: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  calorieCard: {
+    width: '100%',
+    marginBottom: Spacing.xxl,
+  },
+  calorieRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  calorieIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  calorieValue: {
+    fontSize: 24,
+    fontWeight: '800',
+  },
+  calorieLabel: {
+    fontSize: 13,
+    marginTop: 2,
   },
 });

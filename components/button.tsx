@@ -25,7 +25,7 @@ export function Button({
   style,
   compact,
 }: ButtonProps) {
-  const scheme = useColorScheme() ?? 'light';
+  const scheme = useColorScheme();
   const colors = Colors[scheme];
 
   const bgColors = {

@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import { StyleSheet, View, Text, Pressable, ScrollView, Modal } from 'react-native';
+import React, { useState, useCallback, useRef } from 'react';
+import { StyleSheet, View, Text, Pressable, ScrollView, Modal, Platform, Alert } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -22,6 +22,10 @@ import {
   ProgressRing,
   PulseView,
 } from '@/components/animated-components';
+import {
+  scheduleWorkoutNotification,
+  cancelWorkoutNotification,
+} from '@/data/notifications';
 
 const DAYS_RU = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 const MONTHS_RU = [
@@ -29,8 +33,10 @@ const MONTHS_RU = [
   'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь',
 ];
 
+import { v4 as uuidv4 } from 'uuid';
+
 function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).substring(2, 10);
+  return uuidv4();
 }
 
 function getMonthDays(year: number, month: number) {
@@ -52,7 +58,7 @@ function toDateStr(year: number, month: number, day: number) {
 export default function CalendarScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const scheme = useColorScheme() ?? 'light';
+  const scheme = useColorScheme();
   const colors = Colors[scheme];
 
   const now = new Date();
@@ -65,6 +71,11 @@ export default function CalendarScreen() {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [scheduled, setScheduled] = useState<ScheduledWorkout[]>([]);
   const [showPicker, setShowPicker] = useState(false);
+  const [timeEnabled, setTimeEnabled] = useState(false);
+  const [selectedHour, setSelectedHour] = useState(now.getHours());
+  const [selectedMinute, setSelectedMinute] = useState(0);
+  const [notifIds, setNotifIds] = useState<Record<string, string>>({});
+  const hourScrollRef = useRef<ScrollView>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -98,19 +109,56 @@ export default function CalendarScreen() {
     .filter((l) => l.date.startsWith(monthPrefix))
     .reduce((s, l) => s + l.durationMinutes, 0);
 
+  const isPastDate = selectedDate < todayStr;
+  const isToday = selectedDate === todayStr;
+
   const handleScheduleWorkout = async (workout: Workout) => {
+    if (isPastDate) return;
+    const time = timeEnabled
+      ? `${String(selectedHour).padStart(2, '0')}:${String(selectedMinute).padStart(2, '0')}`
+      : undefined;
+    if (isToday && time) {
+      const nowH = new Date().getHours();
+      const nowM = new Date().getMinutes();
+      if (selectedHour < nowH || (selectedHour === nowH && selectedMinute < nowM)) {
+        if (Platform.OS === 'web') {
+          alert('Нельзя назначить тренировку на прошедшее время');
+        } else {
+          Alert.alert('Ошибка', 'Нельзя назначить тренировку на прошедшее время');
+        }
+        return;
+      }
+    }
     const item: ScheduledWorkout = {
       id: generateId(),
       workoutId: workout.id,
       workoutName: workout.name,
       date: selectedDate,
+      time,
     };
     const updated = await addScheduledWorkout(item);
     setScheduled(updated);
+
+    if (time) {
+      const notifId = await scheduleWorkoutNotification(workout.name, selectedDate, time, item.id);
+      if (notifId) {
+        setNotifIds((prev) => ({ ...prev, [item.id]: notifId }));
+      }
+    }
+
     setShowPicker(false);
+    setTimeEnabled(false);
   };
 
   const handleDeleteScheduled = async (id: string) => {
+    if (notifIds[id]) {
+      await cancelWorkoutNotification(notifIds[id]);
+      setNotifIds((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    }
     const updated = await deleteScheduledWorkout(id);
     setScheduled(updated);
   };
@@ -250,6 +298,7 @@ export default function CalendarScreen() {
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
             {selectedDate === todayStr ? 'Сегодня' : selectedDate}
           </Text>
+          {!isPastDate && (
           <ScalePressable
             onPress={() => setShowPicker(true)}
           >
@@ -258,6 +307,7 @@ export default function CalendarScreen() {
               <Text style={[styles.addBtnText, { color: colors.tint }]}>Назначить</Text>
             </View>
           </ScalePressable>
+          )}
         </View>
         </FadeInView>
 
@@ -270,7 +320,9 @@ export default function CalendarScreen() {
                 <CalendarPlusIcon size={18} color={colors.tint} />
               </View>
               <View style={styles.scheduledInfo}>
-                <Text style={[styles.scheduledLabel, { color: colors.textSecondary }]}>Запланировано</Text>
+                <Text style={[styles.scheduledLabel, { color: colors.textSecondary }]}>
+                  Запланировано{sw.time ? ` на ${sw.time}` : ''}
+                </Text>
                 <Text style={[styles.scheduledName, { color: colors.text }]}>{sw.workoutName}</Text>
               </View>
               <View style={styles.scheduledActions}>
@@ -378,6 +430,85 @@ export default function CalendarScreen() {
             <Text style={[styles.modalSubtitle, { color: colors.textSecondary }]}>
               {selectedDate === todayStr ? 'Назначить на сегодня' : `Назначить на ${selectedDate}`}
             </Text>
+
+            <Pressable
+              onPress={() => setTimeEnabled(!timeEnabled)}
+              style={[
+                styles.timeToggle,
+                { backgroundColor: timeEnabled ? colors.tintLight : colors.inputBackground },
+              ]}
+            >
+              <Text style={{ fontSize: 18 }}>⏰</Text>
+              <Text
+                style={[
+                  styles.timeToggleText,
+                  { color: timeEnabled ? colors.tint : colors.textSecondary },
+                ]}
+              >
+                {timeEnabled
+                  ? `Время: ${String(selectedHour).padStart(2, '0')}:${String(selectedMinute).padStart(2, '0')}`
+                  : 'Добавить время'}
+              </Text>
+            </Pressable>
+
+            {timeEnabled && (
+              <View style={styles.timePickerWrap}>
+                <View style={styles.timeColumn}>
+                  <Text style={[styles.timeColumnLabel, { color: colors.textSecondary }]}>Час</Text>
+                  <ScrollView
+                    ref={hourScrollRef}
+                    style={styles.timeScroll}
+                    showsVerticalScrollIndicator={false}
+                    nestedScrollEnabled
+                  >
+                    {Array.from({ length: 24 }, (_, i) => i).map((h) => (
+                      <Pressable
+                        key={h}
+                        onPress={() => setSelectedHour(h)}
+                        style={[
+                          styles.timeOption,
+                          selectedHour === h && { backgroundColor: colors.tint },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.timeOptionText,
+                            { color: selectedHour === h ? '#FFF' : colors.text },
+                          ]}
+                        >
+                          {String(h).padStart(2, '0')}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </ScrollView>
+                </View>
+                <Text style={[styles.timeSeparator, { color: colors.text }]}>:</Text>
+                <View style={styles.timeColumn}>
+                  <Text style={[styles.timeColumnLabel, { color: colors.textSecondary }]}>Мин</Text>
+                  <ScrollView style={styles.timeScroll} showsVerticalScrollIndicator={false} nestedScrollEnabled>
+                    {Array.from({ length: 12 }, (_, i) => i * 5).map((m) => (
+                      <Pressable
+                        key={m}
+                        onPress={() => setSelectedMinute(m)}
+                        style={[
+                          styles.timeOption,
+                          selectedMinute === m && { backgroundColor: colors.tint },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.timeOptionText,
+                            { color: selectedMinute === m ? '#FFF' : colors.text },
+                          ]}
+                        >
+                          {String(m).padStart(2, '0')}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </ScrollView>
+                </View>
+              </View>
+            )}
 
             {workouts.length === 0 ? (
               <View style={styles.modalEmpty}>
@@ -728,5 +859,52 @@ const styles = StyleSheet.create({
   modalCancelText: {
     fontSize: 15,
     fontWeight: '600',
+  },
+  timeToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.md,
+  },
+  timeToggleText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  timePickerWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  timeColumn: {
+    alignItems: 'center',
+    width: 64,
+  },
+  timeColumnLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  timeScroll: {
+    height: 140,
+  },
+  timeOption: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: BorderRadius.sm,
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  timeOptionText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  timeSeparator: {
+    fontSize: 24,
+    fontWeight: '700',
+    marginTop: 20,
   },
 });

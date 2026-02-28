@@ -16,7 +16,7 @@ interface SearchBarProps extends TextInputProps {
 }
 
 export function SearchBar({ value, onChangeText, onClear, style, ...props }: SearchBarProps) {
-  const scheme = useColorScheme() ?? 'light';
+  const scheme = useColorScheme();
   const colors = Colors[scheme];
   const [focused, setFocused] = useState(false);
 

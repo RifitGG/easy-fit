@@ -11,7 +11,7 @@ interface GlassCardProps extends ViewProps {
 }
 
 export function GlassCard({ style, children, intensity = 40, noPadding, elevated, ...props }: GlassCardProps) {
-  const scheme = useColorScheme() ?? 'light';
+  const scheme = useColorScheme();
   const colors = Colors[scheme];
 
   return (

@@ -5,8 +5,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
 import { Workout } from '@/data/types';
-import { loadWorkouts } from '@/data/storage';
-import { getExerciseById } from '@/data/exercises';
+import { loadWorkouts, loadWorkoutsLocal } from '@/data/storage';
+import { ensureExercisesLoaded, getExerciseFromCache } from '@/data/exercises';
 import { GlassCard } from '@/components/glass-card';
 import { Badge } from '@/components/badge';
 import { Button } from '@/components/button';
@@ -18,16 +18,30 @@ export default function WorkoutDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const scheme = useColorScheme() ?? 'light';
+  const scheme = useColorScheme();
   const colors = Colors[scheme];
   const [workout, setWorkout] = useState<Workout | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
-      loadWorkouts().then((all) => {
-        const found = all.find((w) => w.id === id);
-        setWorkout(found ?? null);
-      });
+      let active = true;
+      const load = async () => {
+        await ensureExercisesLoaded();
+        const local = await loadWorkoutsLocal();
+        const localFound = local.find((w) => String(w.id) === String(id));
+        if (active && localFound) setWorkout(localFound);
+        try {
+          const all = await loadWorkouts();
+          if (active) {
+            const found = all.find((w) => String(w.id) === String(id));
+            if (found) setWorkout(found);
+          }
+        } catch {}
+        if (active) setLoaded(true);
+      };
+      load();
+      return () => { active = false; };
     }, [id])
   );
 
@@ -41,7 +55,9 @@ export default function WorkoutDetailScreen() {
           </Pressable>
         </View>
         <View style={styles.empty}>
-          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Тренировка не найдена</Text>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+            {loaded ? 'Тренировка не найдена' : 'Загрузка...'}
+          </Text>
         </View>
       </View>
     );
@@ -96,7 +112,7 @@ export default function WorkoutDetailScreen() {
         </FadeInView>
 
         {workout.exercises.map((we, index) => {
-          const exercise = getExerciseById(we.exerciseId);
+          const exercise = getExerciseFromCache(we.exerciseId);
           if (!exercise) return null;
 
           return (

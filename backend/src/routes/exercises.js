@@ -40,7 +40,15 @@ router.get('/', async (req, res) => {
     sql += ' GROUP BY e.id ORDER BY e.name';
 
     const result = await pool.query(sql, params);
-    res.json(result.rows);
+    const rows = result.rows.map(r => ({
+      ...r,
+      muscleGroups: Array.isArray(r.muscleGroups)
+        ? r.muscleGroups.filter(Boolean)
+        : typeof r.muscleGroups === 'string'
+          ? r.muscleGroups.replace(/[{}]/g, '').split(',').filter(Boolean)
+          : [],
+    }));
+    res.json(rows);
   } catch (err) {
     console.error('Get exercises error:', err);
     res.status(500).json({ error: 'Ошибка сервера' });
@@ -69,6 +77,11 @@ router.get('/:id', async (req, res) => {
     );
 
     const exercise = exResult.rows[0];
+    exercise.muscleGroups = Array.isArray(exercise.muscleGroups)
+      ? exercise.muscleGroups.filter(Boolean)
+      : typeof exercise.muscleGroups === 'string'
+        ? exercise.muscleGroups.replace(/[{}]/g, '').split(',').filter(Boolean)
+        : [];
     exercise.steps = stepsResult.rows.map(r => r.text);
 
     res.json(exercise);

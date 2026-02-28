@@ -2,14 +2,14 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { HapticTab } from '@/components/haptic-tab';
-import { DumbbellIcon, ListIcon, HomeIcon, UserIcon } from '@/components/icons';
+import { DumbbellIcon, ListIcon, HomeIcon, GlobeIcon } from '@/components/icons';
 import { CalendarIcon } from '@/components/exercise-icons';
 import { AnimatedTabIcon } from '@/components/animated-components';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme() ?? 'light';
+  const colorScheme = useColorScheme();
   const colors = Colors[colorScheme];
 
   const tabBarBg = colorScheme === 'dark' ? '#1E1E32' : '#FFFFFF';
@@ -90,12 +90,12 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="community"
         options={{
-          title: 'Профиль',
+          title: 'Сообщество',
           tabBarIcon: ({ color, focused }) => (
             <AnimatedTabIcon focused={focused}>
-              <UserIcon size={24} color={color} />
+              <GlobeIcon size={24} color={color} />
             </AnimatedTabIcon>
           ),
         }}

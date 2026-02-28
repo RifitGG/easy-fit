@@ -1,11 +1,12 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, View, FlatList, Text } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors, Spacing } from '@/constants/theme';
-import { exercises } from '@/data/exercises';
-import { MUSCLE_GROUP_LABELS, MuscleGroup } from '@/data/types';
+import { loadExercises } from '@/data/exercises';
+import { Exercise, MUSCLE_GROUP_LABELS, MuscleGroup } from '@/data/types';
 import { SearchBar } from '@/components/search-bar';
 import { ChipFilter } from '@/components/chip-filter';
 import { ExerciseCard } from '@/components/exercise-card';
@@ -17,38 +18,30 @@ const muscleGroupOptions = Object.entries(MUSCLE_GROUP_LABELS).map(([value, labe
   label,
 }));
 
-function getGreeting(): string {
-  const h = new Date().getHours();
-  if (h < 6) return 'Доброй ночи';
-  if (h < 12) return 'Доброе утро';
-  if (h < 18) return 'Добрый день';
-  return 'Добрый вечер';
-}
-
 export default function CatalogScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const scheme = useColorScheme() ?? 'light';
+  const scheme = useColorScheme();
   const colors = Colors[scheme];
 
+  const [exercises, setExercises] = useState<Exercise[]>([]);
   const [search, setSearch] = useState('');
   const [selectedMuscle, setSelectedMuscle] = useState<string | null>(null);
 
-  const filtered = useMemo(() => {
-    return exercises.filter((ex) => {
-      const matchesSearch =
-        !search ||
-        ex.name.toLowerCase().includes(search.toLowerCase()) ||
-        ex.description.toLowerCase().includes(search.toLowerCase());
+  useFocusEffect(
+    useCallback(() => {
+      loadExercises().then(setExercises);
+    }, [])
+  );
 
-      const matchesMuscle =
-        !selectedMuscle || ex.muscleGroups.includes(selectedMuscle as MuscleGroup);
-
-      return matchesSearch && matchesMuscle;
-    });
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadExercises({ search: search || undefined, muscle: selectedMuscle || undefined }).then(setExercises);
+    }, 300);
+    return () => clearTimeout(timer);
   }, [search, selectedMuscle]);
 
-  const renderItem = useCallback(({ item, index }: { item: typeof exercises[0]; index: number }) => (
+  const renderItem = useCallback(({ item, index }: { item: Exercise; index: number }) => (
     <StaggeredItem index={index}>
       <ExerciseCard
         exercise={item}
@@ -61,10 +54,9 @@ export default function CatalogScreen() {
     <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
       <FadeInView delay={0} direction="down">
         <View style={styles.header}>
-          <Text style={[styles.greeting, { color: colors.tint }]}>{getGreeting()}</Text>
           <Text style={[styles.title, { color: colors.text }]}>Упражнения</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            {filtered.length} упражнений в каталоге
+            {exercises.length} упражнений в каталоге
           </Text>
         </View>
       </FadeInView>
@@ -84,7 +76,7 @@ export default function CatalogScreen() {
       </FadeInView>
 
       <FlatList
-        data={filtered}
+        data={exercises}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
@@ -112,13 +104,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.sm,
-  },
-  greeting: {
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-    marginBottom: Spacing.xs,
   },
   title: {
     fontSize: 32,

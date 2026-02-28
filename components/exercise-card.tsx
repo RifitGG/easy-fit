@@ -3,9 +3,10 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors, BorderRadius, Spacing } from '@/constants/theme';
 import { Exercise } from '@/data/types';
+import { getCaloriesPerSet } from '@/data/calories';
 import { GlassCard } from './glass-card';
 import { MuscleGroupBadge, DifficultyBadge, EquipmentBadge } from './badge';
-import { ChevronRightIcon } from './icons';
+import { ChevronRightIcon, FlameIcon } from './icons';
 import { ExerciseIcon } from './exercise-icons';
 import { ScalePressable } from './animated-components';
 
@@ -16,7 +17,7 @@ interface ExerciseCardProps {
 }
 
 export function ExerciseCard({ exercise, onPress, rightElement }: ExerciseCardProps) {
-  const scheme = useColorScheme() ?? 'light';
+  const scheme = useColorScheme();
   const colors = Colors[scheme];
 
   return (
@@ -42,6 +43,10 @@ export function ExerciseCard({ exercise, onPress, rightElement }: ExerciseCardPr
           ))}
           <EquipmentBadge equipment={exercise.equipment} />
           <DifficultyBadge difficulty={exercise.difficulty} />
+          <View style={[styles.calorieBadge, { backgroundColor: colors.warningLight }]}>
+            <FlameIcon size={12} color={colors.warning} />
+            <Text style={[styles.calorieText, { color: colors.warning }]}>~{getCaloriesPerSet(exercise.id)} ккал/подход</Text>
+          </View>
         </View>
       </GlassCard>
     </ScalePressable>
@@ -83,5 +88,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Spacing.xs,
+  },
+  calorieBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: BorderRadius.full,
+  },
+  calorieText: {
+    fontSize: 11,
+    fontWeight: '600',
   },
 });

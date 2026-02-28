@@ -1,67 +1,114 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Workout, WorkoutLog, ScheduledWorkout } from './types';
+﻿import { Workout, WorkoutLog, ScheduledWorkout } from './types';
+import {
+  getToken,
+  apiGetWorkouts,
+  apiCreateWorkout,
+  apiDeleteWorkout,
+  apiGetWorkoutLogs,
+  apiSaveWorkoutLog,
+  apiGetScheduled,
+  apiScheduleWorkout,
+  apiDeleteScheduled,
+} from './api';
+import {
+  saveWorkoutLocal,
+  getAllWorkoutsLocal,
+  deleteWorkoutLocal,
+  saveWorkoutLogLocal,
+  getAllWorkoutLogsLocal,
+  saveScheduledLocal,
+  getAllScheduledLocal,
+  deleteScheduledLocal,
+  addToSyncQueue,
+} from './database';
 
-const WORKOUTS_KEY = 'fit_app_workouts';
-const LOGS_KEY = 'fit_app_workout_logs';
-const SCHEDULED_KEY = 'fit_app_scheduled';
-
-export async function loadWorkouts(): Promise<Workout[]> {
-  try {
-    const data = await AsyncStorage.getItem(WORKOUTS_KEY);
-    if (data) {
-      return JSON.parse(data);
-    }
-    return [];
-  } catch {
-    return [];
-  }
+async function isAuthed(): Promise<boolean> {
+  const t = await getToken();
+  return !!t;
 }
 
-export async function saveWorkouts(workouts: Workout[]): Promise<void> {
-  await AsyncStorage.setItem(WORKOUTS_KEY, JSON.stringify(workouts));
+export async function loadWorkoutsLocal(): Promise<Workout[]> {
+  return getAllWorkoutsLocal();
+}
+
+export async function loadWorkouts(): Promise<Workout[]> {
+  if (await isAuthed()) {
+    try {
+      const data = await apiGetWorkouts();
+      const workouts = data.map((w: any) => ({
+        id: String(w.id),
+        name: w.name,
+        exercises: w.exercises || [],
+        createdAt: new Date(w.created_at).getTime(),
+      }));
+      for (const wo of workouts) await saveWorkoutLocal(wo);
+      return getAllWorkoutsLocal();
+    } catch (e: any) {
+      console.warn('[Storage] loadWorkouts API error:', e?.message || e);
+      return getAllWorkoutsLocal();
+    }
+  }
+  return getAllWorkoutsLocal();
 }
 
 export async function addWorkout(workout: Workout): Promise<Workout[]> {
-  const workouts = await loadWorkouts();
-  workouts.unshift(workout);
-  await saveWorkouts(workouts);
-  return workouts;
+  await saveWorkoutLocal(workout);
+  if (await isAuthed()) {
+    try {
+      await apiCreateWorkout(workout.name, workout.exercises, workout.id);
+    } catch {
+      await addToSyncQueue('workout', workout.id, 'create', workout);
+    }
+  }
+  return getAllWorkoutsLocal();
 }
 
 export async function deleteWorkout(id: string): Promise<Workout[]> {
-  const workouts = await loadWorkouts();
-  const filtered = workouts.filter((w) => w.id !== id);
-  await saveWorkouts(filtered);
-  return filtered;
-}
-
-export async function updateWorkout(updated: Workout): Promise<Workout[]> {
-  const workouts = await loadWorkouts();
-  const index = workouts.findIndex((w) => w.id === updated.id);
-  if (index !== -1) {
-    workouts[index] = updated;
+  await deleteWorkoutLocal(id);
+  if (await isAuthed()) {
+    try {
+      await apiDeleteWorkout(id);
+    } catch {
+      await addToSyncQueue('workout', id, 'delete');
+    }
   }
-  await saveWorkouts(workouts);
-  return workouts;
+  return getAllWorkoutsLocal();
 }
 
 export async function loadWorkoutLogs(): Promise<WorkoutLog[]> {
-  try {
-    const data = await AsyncStorage.getItem(LOGS_KEY);
-    if (data) {
-      return JSON.parse(data);
+  if (await isAuthed()) {
+    try {
+      const data = await apiGetWorkoutLogs();
+      const logs = data.map((l: any) => ({
+        id: String(l.id),
+        workoutId: String(l.workoutId),
+        workoutName: l.workoutName,
+        date: typeof l.date === 'string' && l.date.length > 10 ? l.date.slice(0, 10) : l.date,
+        startedAt: new Date(l.startedAt).getTime(),
+        completedAt: new Date(l.completedAt).getTime(),
+        exercises: l.exercises || [],
+        durationMinutes: l.durationMinutes,
+      }));
+      for (const log of logs) await saveWorkoutLogLocal(log);
+      return getAllWorkoutLogsLocal();
+    } catch (e: any) {
+      console.warn('[Storage] loadWorkoutLogs API error:', e?.message || e);
+      return getAllWorkoutLogsLocal();
     }
-    return [];
-  } catch {
-    return [];
   }
+  return getAllWorkoutLogsLocal();
 }
 
 export async function saveWorkoutLog(log: WorkoutLog): Promise<WorkoutLog[]> {
-  const logs = await loadWorkoutLogs();
-  logs.unshift(log);
-  await AsyncStorage.setItem(LOGS_KEY, JSON.stringify(logs));
-  return logs;
+  await saveWorkoutLogLocal(log);
+  if (await isAuthed()) {
+    try {
+      await apiSaveWorkoutLog(log);
+    } catch {
+      await addToSyncQueue('workout_log', log.id, 'create', log);
+    }
+  }
+  return getAllWorkoutLogsLocal();
 }
 
 export async function getLogsByDate(date: string): Promise<WorkoutLog[]> {
@@ -69,40 +116,48 @@ export async function getLogsByDate(date: string): Promise<WorkoutLog[]> {
   return logs.filter((l) => l.date === date);
 }
 
-export async function deleteWorkoutLog(id: string): Promise<WorkoutLog[]> {
-  const logs = await loadWorkoutLogs();
-  const filtered = logs.filter((l) => l.id !== id);
-  await AsyncStorage.setItem(LOGS_KEY, JSON.stringify(filtered));
-  return filtered;
-}
-
-
 export async function loadScheduledWorkouts(): Promise<ScheduledWorkout[]> {
-  try {
-    const data = await AsyncStorage.getItem(SCHEDULED_KEY);
-    if (data) return JSON.parse(data);
-    return [];
-  } catch {
-    return [];
+  if (await isAuthed()) {
+    try {
+      const items = await apiGetScheduled();
+      const mapped = items.map((s: any) => ({
+        ...s,
+        id: String(s.id),
+        workoutId: String(s.workoutId),
+        date: typeof s.date === 'string' && s.date.length > 10 ? s.date.slice(0, 10) : s.date,
+      }));
+      for (const item of mapped) await saveScheduledLocal(item);
+      return getAllScheduledLocal();
+    } catch (e: any) {
+      console.warn('[Storage] loadScheduled API error:', e?.message || e);
+      return getAllScheduledLocal();
+    }
   }
-}
-
-export async function saveScheduledWorkouts(items: ScheduledWorkout[]): Promise<void> {
-  await AsyncStorage.setItem(SCHEDULED_KEY, JSON.stringify(items));
+  return getAllScheduledLocal();
 }
 
 export async function addScheduledWorkout(item: ScheduledWorkout): Promise<ScheduledWorkout[]> {
-  const items = await loadScheduledWorkouts();
-  items.push(item);
-  await saveScheduledWorkouts(items);
-  return items;
+  await saveScheduledLocal(item);
+  if (await isAuthed()) {
+    try {
+      await apiScheduleWorkout(item.workoutId, item.workoutName, item.date, item.time, item.id);
+    } catch {
+      await addToSyncQueue('scheduled', item.id, 'create', item);
+    }
+  }
+  return getAllScheduledLocal();
 }
 
 export async function deleteScheduledWorkout(id: string): Promise<ScheduledWorkout[]> {
-  const items = await loadScheduledWorkouts();
-  const filtered = items.filter((s) => s.id !== id);
-  await saveScheduledWorkouts(filtered);
-  return filtered;
+  await deleteScheduledLocal(id);
+  if (await isAuthed()) {
+    try {
+      await apiDeleteScheduled(id);
+    } catch {
+      await addToSyncQueue('scheduled', id, 'delete');
+    }
+  }
+  return getAllScheduledLocal();
 }
 
 export async function getScheduledByDate(date: string): Promise<ScheduledWorkout[]> {

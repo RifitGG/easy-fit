@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -14,35 +14,46 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
-import { exercises } from '@/data/exercises';
-import { WorkoutExercise } from '@/data/types';
+import { loadExercises, getExerciseFromCache, ensureExercisesLoaded } from '@/data/exercises';
+import { Exercise, WorkoutExercise } from '@/data/types';
 import { addWorkout } from '@/data/storage';
 import { GlassCard } from '@/components/glass-card';
 import { Button } from '@/components/button';
 import { ExerciseCard } from '@/components/exercise-card';
 import { SearchBar } from '@/components/search-bar';
 import { CloseIcon, PlusIcon, MinusIcon, CheckIcon, TrashIcon } from '@/components/icons';
+import { v4 as uuidv4 } from 'uuid';
 
 function generateId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).substring(2, 10);
+  return uuidv4();
 }
 
 export default function CreateWorkoutScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const scheme = useColorScheme() ?? 'light';
+  const scheme = useColorScheme();
   const colors = Colors[scheme];
 
   const [name, setName] = useState('');
   const [selectedExercises, setSelectedExercises] = useState<WorkoutExercise[]>([]);
   const [showPicker, setShowPicker] = useState(false);
   const [search, setSearch] = useState('');
+  const [allExercises, setAllExercises] = useState<Exercise[]>([]);
 
-  const filteredExercises = exercises.filter((ex) => {
-    const alreadySelected = selectedExercises.some((se) => se.exerciseId === ex.id);
-    const matchesSearch =
-      !search || ex.name.toLowerCase().includes(search.toLowerCase());
-    return !alreadySelected && matchesSearch;
+  useEffect(() => {
+    ensureExercisesLoaded().then(setAllExercises);
+  }, []);
+
+  useEffect(() => {
+    if (!showPicker) return;
+    const timer = setTimeout(() => {
+      loadExercises({ search: search || undefined }).then(setAllExercises);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search, showPicker]);
+
+  const filteredExercises = allExercises.filter((ex) => {
+    return !selectedExercises.some((se) => se.exerciseId === ex.id);
   });
 
   const addExercise = (exerciseId: string) => {
@@ -90,7 +101,7 @@ export default function CreateWorkoutScreen() {
   };
 
   const getExerciseName = (id: string) =>
-    exercises.find((e) => e.id === id)?.name ?? 'Unknown';
+    getExerciseFromCache(id)?.name ?? 'Unknown';
 
   if (showPicker) {
     return (

@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FitApp — Ваш персональный тренер</title>
   <link rel="stylesheet" href="style.css" />
+  <script>try{if(localStorage.getItem('fitapp_web_theme')==='light')document.documentElement.setAttribute('data-theme','light')}catch(e){}</script>
 </head>
 <body>
 
-  <!-- NAV -->
   <nav class="nav">
     <div class="nav-inner">
       <div class="nav-logo">
@@ -20,15 +20,23 @@
       </div>
       <div class="nav-links">
         <a href="#features">Возможности</a>
-        <a href="#screenshots">Скриншоты</a>
         <a href="#demo">Попробовать</a>
+        <a href="profile.html" id="navDashLink" style="display:none;">Личный кабинет</a>
         <a href="#download">Скачать</a>
       </div>
-      <a href="#download" class="nav-cta">Скачать</a>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="theme-toggle" onclick="toggleTheme()" title="Сменить тему" id="themeToggle">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" id="themeIcon">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="nav-auth"></div>
+        <a href="#download" class="nav-cta">Скачать</a>
+      <div id="navAuth"></div>
+      </div>
     </div>
   </nav>
 
-  <!-- HERO -->
   <section class="hero">
     <div class="container">
       <div class="hero-inner">
@@ -58,20 +66,10 @@
           <div class="phone-frame">
             <div class="phone-notch"></div>
             <div class="phone-screen">
-              <div class="phone-placeholder">
-                <div class="phone-placeholder-icon">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <path d="M3 9L12 2L21 9V20C21 20.5523 20.5523 21 20 21H4C3.44772 21 3 20.5523 3 20V9Z"
-                      stroke="#8B83FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <polyline points="9,22 9,12 15,12 15,22" stroke="#8B83FF" stroke-width="2"
-                      stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </div>
-                <span class="phone-placeholder-text">Скриншот<br/>главного экрана</span>
-              </div>
+              <img src="screenshot-home.png" alt="FitApp — Главный экран" />
             </div>
           </div>
-          <!-- cards -->
+        
           <div class="phone-floating-1 glass" style="padding: 14px 20px; display: flex; align-items: center; gap: 12px;">
             <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--tint-light); display: flex; align-items: center; justify-content: center;">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -100,12 +98,11 @@
     </div>
   </section>
 
-  <!-- BANNER -->
   <section class="stats-banner">
     <div class="container">
       <div class="stats-grid fade-in">
         <div class="stat-item">
-          <div class="stat-value">20+</div>
+          <div class="stat-value stat-value-exercises">100+</div>
           <div class="stat-label">Упражнений</div>
         </div>
         <div class="stat-item">
@@ -124,7 +121,6 @@
     </div>
   </section>
 
-  <!-- FEATURES -->
   <section class="section" id="features">
     <div class="container">
       <div class="fade-in">
@@ -143,7 +139,7 @@
             </svg>
           </div>
           <h3 class="feature-title">Каталог упражнений</h3>
-          <p class="feature-desc">20+ упражнений с пошаговыми инструкциями. Фильтрация по группам мышц, оборудованию и уровню сложности.</p>
+          <p class="feature-desc">100+ упражнений с пошаговыми инструкциями. Фильтрация по группам мышц, оборудованию и уровню сложности.</p>
         </div>
         <div class="glass feature-card fade-in" style="transition-delay: 0.2s;">
           <div class="feature-icon" style="background: var(--success-light);">
@@ -200,7 +196,6 @@
     </div>
   </section>
 
-  <!-- SCREENSHOTS -->
   <section class="section screenshots-section" id="screenshots">
     <div class="container">
       <div class="fade-in">
@@ -214,16 +209,7 @@
         <div class="screenshot-item">
           <div class="screenshot-frame">
             <div class="screenshot-inner">
-              <div class="screenshot-placeholder">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                  <path d="M3 9L12 2L21 9V20C21 20.5523 20.5523 21 20 21H4C3.44772 21 3 20.5523 3 20V9Z"
-                    stroke="#8B83FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                  <polyline points="9,22 9,12 15,12 15,22" stroke="#8B83FF" stroke-width="1.5"
-                    stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <span class="screenshot-placeholder-label">Главная</span>
-                <span class="screenshot-placeholder-hint">screenshot-home.png</span>
-              </div>
+              <img src="screenshot-home.png" alt="Главный экран" />
             </div>
           </div>
           <div class="screenshot-label">Главный экран</div>
@@ -231,14 +217,7 @@
         <div class="screenshot-item">
           <div class="screenshot-frame">
             <div class="screenshot-inner">
-              <div class="screenshot-placeholder">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                  <path d="M6.5 6.5L17.5 17.5M4 9L9 4M15 20L20 15M3 12L12 3M12 21L21 12"
-                    stroke="#8B83FF" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
-                <span class="screenshot-placeholder-label">Упражнения</span>
-                <span class="screenshot-placeholder-hint">screenshot-exercises.png</span>
-              </div>
+              <img src="screenshot-exercises.png" alt="Каталог упражнений" />
             </div>
           </div>
           <div class="screenshot-label">Каталог упражнений</div>
@@ -246,15 +225,7 @@
         <div class="screenshot-item">
           <div class="screenshot-frame">
             <div class="screenshot-inner">
-              <div class="screenshot-placeholder">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                  <path d="M14 2H6C5.44772 2 5 2.44772 5 3V21C5 21.5523 5.44772 22 6 22H18C18.5523 22 19 21.5523 19 21V7L14 2Z"
-                    stroke="#8B83FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                  <polyline points="14,2 14,7 19,7" stroke="#8B83FF" stroke-width="1.5"/>
-                </svg>
-                <span class="screenshot-placeholder-label">Тренировки</span>
-                <span class="screenshot-placeholder-hint">screenshot-workouts.png</span>
-              </div>
+              <img src="screenshot-workouts.png" alt="Мои тренировки" />
             </div>
           </div>
           <div class="screenshot-label">Мои тренировки</div>
@@ -262,16 +233,7 @@
         <div class="screenshot-item">
           <div class="screenshot-frame">
             <div class="screenshot-inner">
-              <div class="screenshot-placeholder">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                  <rect x="3" y="4" width="18" height="18" rx="2" stroke="#8B83FF" stroke-width="1.5"/>
-                  <line x1="16" y1="2" x2="16" y2="6" stroke="#8B83FF" stroke-width="1.5" stroke-linecap="round"/>
-                  <line x1="8" y1="2" x2="8" y2="6" stroke="#8B83FF" stroke-width="1.5" stroke-linecap="round"/>
-                  <line x1="3" y1="10" x2="21" y2="10" stroke="#8B83FF" stroke-width="1.5"/>
-                </svg>
-                <span class="screenshot-placeholder-label">Календарь</span>
-                <span class="screenshot-placeholder-hint">screenshot-calendar.png</span>
-              </div>
+              <img src="screenshot-calendar.png" alt="Календарь" />
             </div>
           </div>
           <div class="screenshot-label">Календарь</div>
@@ -279,13 +241,7 @@
         <div class="screenshot-item">
           <div class="screenshot-frame">
             <div class="screenshot-inner">
-              <div class="screenshot-placeholder">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                  <polygon points="5,3 19,12 5,21" stroke="#8B83FF" stroke-width="1.5" fill="none"/>
-                </svg>
-                <span class="screenshot-placeholder-label">Тренировка</span>
-                <span class="screenshot-placeholder-hint">screenshot-run.png</span>
-              </div>
+              <img src="screenshot-run.png" alt="Выполнение тренировки" />
             </div>
           </div>
           <div class="screenshot-label">Выполнение тренировки</div>
@@ -294,7 +250,6 @@
     </div>
   </section>
 
-  <!-- HOW IT WORKS -->
   <section class="section">
     <div class="container">
       <div class="fade-in">
@@ -319,7 +274,6 @@
     </div>
   </section>
 
-  <!-- DEMO -->
   <section class="section demo-section" id="demo">
     <div class="container">
       <div class="fade-in">
@@ -330,16 +284,13 @@
         </p>
       </div>
 
-      <!-- Demo Tabs -->
       <div class="demo-tabs fade-in">
         <button class="demo-tab active" data-tab="catalog" onclick="switchDemoTab('catalog')">Каталог упражнений</button>
         <button class="demo-tab" data-tab="builder" onclick="switchDemoTab('builder')">Создать тренировку</button>
       </div>
 
       <div class="demo-container fade-in">
-        <!-- LEFT PANEL -->
         <div>
-          <!-- CATALOG TAB -->
           <div id="tab-catalog">
             <div class="demo-search-wrap">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -352,7 +303,6 @@
             <div class="exercise-list" id="exerciseList"></div>
           </div>
 
-          <!-- BUILDER TAB -->
           <div id="tab-builder" class="workout-builder">
             <div class="workout-input-group">
               <label>Название тренировки</label>
@@ -370,7 +320,6 @@
           </div>
         </div>
 
-        <!-- EXERCISE DETAIL -->
         <div>
           <div class="exercise-detail glass elevated" id="exerciseDetail">
             <div id="exerciseDetailContent">
@@ -396,7 +345,6 @@
     </div>
   </section>
 
-  <!-- CTA -->
   <section class="cta-section" id="download">
     <div class="container">
       <div class="cta-content fade-in">
@@ -431,7 +379,6 @@
     </div>
   </section>
 
-  <!-- FOOTER -->
   <footer class="footer">
     <div class="container">
       <div class="footer-inner">
@@ -444,6 +391,14 @@
       </div>
     </div>
   </footer>
+
+  <div class="modal-overlay" id="authModal" style="display:none;">
+    <div id="authModalContent"></div>
+  </div>
+
+  <div class="modal-overlay" id="demoRunner" style="display:none;">
+    <div class="demo-runner-card glass elevated" id="demoRunnerContent"></div>
+  </div>
 
   <script src="script.js"></script>
 </body>

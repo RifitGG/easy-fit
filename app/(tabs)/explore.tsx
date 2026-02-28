@@ -1,14 +1,16 @@
 import React, { useState, useCallback } from 'react';
-import { StyleSheet, View, FlatList, Text, Pressable, Alert } from 'react-native';
+import { StyleSheet, View, FlatList, Text, Pressable, Alert, Modal, TextInput, ScrollView } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
-import { Workout } from '@/data/types';
+import { Workout, Difficulty, DIFFICULTY_LABELS } from '@/data/types';
 import { loadWorkouts, deleteWorkout } from '@/data/storage';
-import { getExerciseById } from '@/data/exercises';
+import { ensureExercisesLoaded, getExerciseFromCache } from '@/data/exercises';
+import { apiPublishWorkout, apiGetMyPublished } from '@/data/api';
+import { useAuth } from '@/data/auth-context';
 import { GlassCard } from '@/components/glass-card';
-import { PlusIcon, TrashIcon, DumbbellIcon } from '@/components/icons';
+import { PlusIcon, TrashIcon, DumbbellIcon, ShareIcon, CloseIcon, GlobeIcon } from '@/components/icons';
 import { PlayIcon } from '@/components/exercise-icons';
 import { Button } from '@/components/button';
 import {
@@ -21,15 +23,54 @@ import {
 export default function WorkoutsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const scheme = useColorScheme() ?? 'light';
+  const scheme = useColorScheme();
   const colors = Colors[scheme];
+  const { user } = useAuth();
   const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const [publishedIds, setPublishedIds] = useState<Set<string>>(new Set());
+  const [publishModal, setPublishModal] = useState(false);
+  const [publishTarget, setPublishTarget] = useState<Workout | null>(null);
+  const [pubTitle, setPubTitle] = useState('');
+  const [pubDesc, setPubDesc] = useState('');
+  const [pubDiff, setPubDiff] = useState<Difficulty>('intermediate');
+  const [publishing, setPublishing] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
-      loadWorkouts().then(setWorkouts);
-    }, [])
+      ensureExercisesLoaded().then(() => loadWorkouts()).then(setWorkouts);
+      if (user) {
+        apiGetMyPublished()
+          .then(list => setPublishedIds(new Set(list.map((p: any) => p.workoutId))))
+          .catch(() => {});
+      }
+    }, [user])
   );
+
+  const openPublishModal = (w: Workout) => {
+    if (!user) {
+      Alert.alert('Авторизация', 'Войдите в аккаунт, чтобы публиковать тренировки');
+      return;
+    }
+    setPublishTarget(w);
+    setPubTitle(w.name);
+    setPubDesc('');
+    setPubDiff('intermediate');
+    setPublishModal(true);
+  };
+
+  const handlePublish = async () => {
+    if (!publishTarget) return;
+    setPublishing(true);
+    try {
+      await apiPublishWorkout(publishTarget.id, pubTitle, pubDesc, pubDiff);
+      setPublishedIds(prev => new Set(prev).add(publishTarget.id));
+      setPublishModal(false);
+      Alert.alert('Опубликовано!', 'Ваша тренировка появилась в сообществе');
+    } catch (err: any) {
+      Alert.alert('Ошибка', err.message);
+    }
+    setPublishing(false);
+  };
 
   const handleDelete = (id: string, name: string) => {
     Alert.alert('Удалить тренировку', `Удалить "${name}"?`, [
@@ -47,7 +88,7 @@ export default function WorkoutsScreen() {
 
   const renderWorkout = ({ item, index }: { item: Workout; index: number }) => {
     const exerciseNames = item.exercises
-      .map((we) => getExerciseById(we.exerciseId)?.name ?? 'Unknown')
+      .map((we) => getExerciseFromCache(we.exerciseId)?.name ?? 'Unknown')
       .join(', ');
 
     const totalSets = item.exercises.reduce((sum, we) => sum + we.sets, 0);
@@ -90,6 +131,20 @@ export default function WorkoutsScreen() {
                   <Text style={[styles.playText, { color: colors.tint }]}>Начать</Text>
                 </Pressable>
               </PulseView>
+              {publishedIds.has(item.id) ? (
+                <View style={[styles.playBtn, { backgroundColor: '#34D39922' }]}>
+                  <GlobeIcon size={14} color="#34D399" />
+                  <Text style={[styles.playText, { color: '#34D399' }]}>Опубликовано</Text>
+                </View>
+              ) : user ? (
+                <Pressable
+                  onPress={() => openPublishModal(item)}
+                  style={[styles.playBtn, { backgroundColor: colors.cardBackground, borderWidth: 1, borderColor: colors.cardBorder }]}
+                >
+                  <ShareIcon size={14} color={colors.tint} />
+                  <Text style={[styles.playText, { color: colors.tint }]}>Опубликовать</Text>
+                </Pressable>
+              ) : null}
             </View>
           </GlassCard>
         </ScalePressable>
@@ -122,6 +177,7 @@ export default function WorkoutsScreen() {
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         renderItem={renderWorkout}
+        extraData={publishedIds}
         ListEmptyComponent={
           <FadeInView delay={200}>
             <View style={styles.empty}>
@@ -140,6 +196,65 @@ export default function WorkoutsScreen() {
           </FadeInView>
         }
       />
+
+      <Modal visible={publishModal} animationType="slide" transparent>
+        <View style={[styles.modalOverlay, { backgroundColor: colors.background + 'F2' }]}>
+          <View style={[styles.modalCard, { backgroundColor: colors.cardBackground }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Опубликовать</Text>
+              <Pressable onPress={() => setPublishModal(false)} hitSlop={10}>
+                <CloseIcon size={24} color={colors.textSecondary} />
+              </Pressable>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Название</Text>
+              <TextInput
+                style={[styles.fieldInput, { color: colors.text, backgroundColor: colors.background, borderColor: colors.inputBorder }]}
+                value={pubTitle}
+                onChangeText={setPubTitle}
+                placeholder="Название тренировки"
+                placeholderTextColor={colors.textSecondary}
+              />
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Описание (необязательно)</Text>
+              <TextInput
+                style={[styles.fieldInput, styles.fieldMulti, { color: colors.text, backgroundColor: colors.background, borderColor: colors.inputBorder }]}
+                value={pubDesc}
+                onChangeText={setPubDesc}
+                placeholder="Расскажите о тренировке..."
+                placeholderTextColor={colors.textSecondary}
+                multiline
+                numberOfLines={3}
+              />
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Сложность</Text>
+              <View style={styles.diffRow}>
+                {(['beginner', 'intermediate', 'advanced'] as Difficulty[]).map(d => {
+                  const active = pubDiff === d;
+                  const c = d === 'beginner' ? '#34D399' : d === 'advanced' ? '#F87171' : '#FBBF24';
+                  return (
+                    <Pressable
+                      key={d}
+                      onPress={() => setPubDiff(d)}
+                      style={[styles.diffChip, { backgroundColor: active ? c + '22' : colors.background, borderColor: active ? c : colors.cardBorder }]}
+                    >
+                      <Text style={[styles.diffChipText, { color: active ? c : colors.textSecondary }]}>
+                        {DIFFICULTY_LABELS[d]}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </ScrollView>
+            <Pressable
+              onPress={handlePublish}
+              disabled={publishing || !pubTitle.trim()}
+              style={[styles.publishBtn, { backgroundColor: colors.tint, opacity: publishing || !pubTitle.trim() ? 0.5 : 1 }]}
+            >
+              <ShareIcon size={18} color="#FFF" />
+              <Text style={styles.publishBtnText}>{publishing ? 'Публикуем...' : 'Опубликовать'}</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -200,6 +315,8 @@ const styles = StyleSheet.create({
   },
   cardFooter: {
     flexDirection: 'row',
+    gap: Spacing.sm,
+    flexWrap: 'wrap',
   },
   playBtn: {
     flexDirection: 'row',
@@ -230,5 +347,72 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 15,
     textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  modalCard: {
+    height: '70%',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: Spacing.xl,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+  },
+  fieldLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: Spacing.xs,
+    marginTop: Spacing.md,
+  },
+  fieldInput: {
+    fontSize: 15,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+  },
+  fieldMulti: {
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  diffRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+  diffChip: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+  },
+  diffChipText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  publishBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    marginTop: Spacing.lg,
+  },
+  publishBtnText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFF',
   },
 });

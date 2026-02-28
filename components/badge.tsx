@@ -11,7 +11,7 @@ interface BadgeProps {
 }
 
 export function Badge({ label, variant = 'default', style }: BadgeProps) {
-  const scheme = useColorScheme() ?? 'light';
+  const scheme = useColorScheme();
   const colors = Colors[scheme];
 
   const bgColor = {
